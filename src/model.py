@@ -67,7 +67,15 @@ class YOLOv1(nn.Module):
             nn.Linear(config.S * config.S * 1024, 4096),
             nn.Dropout(),
             nn.LeakyReLU(negative_slope=0.1),
+            # config.S * config.S * [B1, B2, C] where `B1` and `B2` both have attributes {x, y, w, h, c},
+            # and `c` means the confidence
             nn.Linear(4096, config.S * config.S * self.depth)
         ]
 
         self.model = nn.Sequential(*layers)
+
+    def forward(self, x):
+        return torch.reshape(
+            self.model.forward(x),
+            (x.shape[0], config.S, config.S, self.depth)
+        )
